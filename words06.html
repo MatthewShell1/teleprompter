@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Knowledge Web — Version 02</title>
+  <title>Knowledge Web — Version 06</title>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <style>
     * {
@@ -53,20 +53,34 @@
       position: relative;
       width: 100%;
       height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background:
         radial-gradient(circle at 50% 40%, rgba(56, 189, 248, 0.07) 0%, transparent 42%),
         linear-gradient(180deg, #020617 0%, #0f172a 52%, #020617 100%);
+    }
+
+    .stage {
+      position: relative;
+      width: 960px;
+      height: 540px;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow:
+        0 0 0 1px rgba(56, 189, 248, 0.12),
+        0 20px 60px rgba(0, 0, 0, 0.45);
     }
 
     .grid {
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(rgba(56, 189, 248, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(56, 189, 248, 0.035) 1px, transparent 1px);
-      background-size: 48px 48px;
-      mask-image: radial-gradient(circle at center, black 18%, transparent 78%);
-      opacity: 0.65;
+        linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.55;
+      pointer-events: none;
     }
 
     .chaos-layer {
@@ -79,13 +93,13 @@
     .phrase-node {
       position: absolute;
       width: max-content;
-      max-width: 240px;
-      padding: 0.7rem 0.9rem;
+      max-width: 210px;
+      padding: 0.55rem 0.75rem;
       border: 1px solid rgba(56, 189, 248, 0.35);
       border-radius: 999px;
       background: rgba(15, 23, 42, 0.88);
       color: #e2e8f0;
-      font-size: 1.08rem;
+      font-size: 0.95rem;
       line-height: 1.25;
       text-align: center;
       letter-spacing: 0.02em;
@@ -126,20 +140,21 @@
 
     .framework {
       position: absolute;
-      inset: 5.5rem 5rem 2rem;
+      inset: 0.55rem 0.85rem;
       z-index: 1;
       display: flex;
       justify-content: center;
-      gap: 2rem;
+      align-items: center;
+      gap: 1.1rem;
       opacity: 0;
       pointer-events: none;
     }
 
     .column {
-      width: min(42%, 360px);
+      width: 46%;
       display: flex;
       flex-direction: column;
-      gap: 1.35rem;
+      gap: 0.85rem;
     }
 
     .category {
@@ -149,8 +164,8 @@
     }
 
     .category-title {
-      font-size: 1.35rem;
-      letter-spacing: 0.14em;
+      font-size: 1.05rem;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: #7dd3fc;
       opacity: 0;
@@ -162,21 +177,21 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      gap: 0.2rem;
-      margin-left: 1rem;
-      padding-left: 0.75rem;
-      border-left: 2px solid rgba(56, 189, 248, 0.22);
+      gap: 0.12rem;
+      margin-left: 0.75rem;
+      padding-left: 0.55rem;
+      border-left: 2px solid transparent;
     }
 
     .item-slot {
       width: fit-content;
       max-width: 100%;
-      min-height: 2rem;
+      min-height: 1.55rem;
       display: flex;
       align-items: center;
-      padding: 0.15rem 0;
+      padding: 0.05rem 0;
       color: #cbd5e1;
-      font-size: 1.02rem;
+      font-size: 0.88rem;
       line-height: 1.3;
     }
 
@@ -197,24 +212,27 @@
     <nav class="version-nav" aria-label="Animation versions">
       <a href="words.html">Original</a>
       <a href="words01.html">01</a>
-      <a href="words02.html" class="active">02</a>
+      <a href="words02.html">02</a>
       <a href="words03.html">03</a>
       <a href="words04.html">04</a>
       <a href="words05.html">05</a>
-      <a href="words06.html">06</a>
+      <a href="words06.html" class="active">06</a>
       <a href="words07.html">07</a>
       <a href="words08.html">08</a>
       <a href="words09.html">09</a>
     </nav>
 
-    <div class="grid"></div>
+    <div class="stage" id="stage">
+      <div class="grid"></div>
 
-    <div class="framework" id="framework">
-      <div class="column" id="col-left"></div>
-      <div class="column" id="col-right"></div>
+      <div class="framework" id="framework">
+        <div class="column" id="col-left"></div>
+        <div class="column" id="col-right"></div>
+      </div>
+
+      <div class="chaos-layer" id="chaos"></div>
     </div>
 
-    <div class="chaos-layer" id="chaos"></div>
     <div class="timer" id="timer">0.0s</div>
   </div>
 
@@ -222,20 +240,27 @@
     (function () {
       "use strict";
 
+      var TOTAL_DURATION = 14;
+      var ZOOM_DURATION = 1;
+      var ZOOM_OVERLAP = 0.5;
+      var ZOOM_STAGGER = ZOOM_DURATION - ZOOM_OVERLAP;
+      var ORGANIZE_START = 9;
+      var LINES_AT = TOTAL_DURATION - 1;
+
       var DISPLAY_PHRASES = [
         { order: 1, text: "Gift ideas", category: "Personal" },
-        { order: 2, text: "Books I want to read", category: "Personal" },
+        { order: 2, text: "Books I want to read", category: "Entertainment" },
         { order: 3, text: "Stories from relatives", category: "Family" },
         { order: 4, text: "Home inventory", category: "Household" },
         { order: 5, text: "Job search", category: "Career" },
         { order: 6, text: "Long-term goals", category: "Personal" },
-        { order: 7, text: "Quotes", category: "Personal" },
+        { order: 7, text: "Quotes", category: "Entertainment" },
         { order: 8, text: "Concerts I've seen", category: "Personal" },
         { order: 8, text: "Warranty information", category: "Products" },
         { order: 9, text: "Home improvement ideas", category: "Household" },
         { order: 10, text: "Appliance manuals", category: "Products" },
         { order: 11, text: "Interview preparation", category: "Career" },
-        { order: 12, text: "Jokes", category: "Personal" },
+        { order: 12, text: "Jokes", category: "Entertainment" },
         { order: 13, text: "Maintenance schedules", category: "Household" },
         { order: 14, text: "Family traditions", category: "Family" },
         { order: 15, text: "Voting information", category: "Personal" },
@@ -251,16 +276,16 @@
               "Voting information",
               "Gift ideas",
               "Concerts I've seen",
-              "Books I want to read",
-              "Jokes",
-              "Quotes",
             ],
           },
           {
             title: "Family",
             items: ["Family traditions", "Stories from relatives"],
           },
-          { title: "Entertainment", items: [] },
+          {
+            title: "Entertainment",
+            items: ["Books I want to read", "Jokes", "Quotes"],
+          },
         ],
         right: [
           {
@@ -284,7 +309,7 @@
         ],
       };
 
-      var scene = document.getElementById("scene");
+      var stage = document.getElementById("stage");
       var chaosLayer = document.getElementById("chaos");
       var frameworkEl = document.getElementById("framework");
       var colLeft = document.getElementById("col-left");
@@ -292,6 +317,137 @@
       var timerEl = document.getElementById("timer");
 
       var COLLISION_PAD = 18;
+      var MIN_Y_SEPARATION = 48;
+      var SPAWN_WIDTH = 960;
+      var SPAWN_HEIGHT = 540;
+
+      function getSpawnViewport() {
+        return {
+          left: 0,
+          top: 0,
+          right: SPAWN_WIDTH,
+          bottom: SPAWN_HEIGHT,
+          centerX: SPAWN_WIDTH / 2,
+          centerY: SPAWN_HEIGHT / 2,
+        };
+      }
+
+      function clampToViewport(cx, cy, halfW, halfH, vp) {
+        return {
+          x: Math.max(vp.left + halfW, Math.min(vp.right - halfW, cx)),
+          y: Math.max(vp.top + halfH, Math.min(vp.bottom - halfH, cy)),
+        };
+      }
+
+      function buildSpawnAnchors(total) {
+        var vp = getSpawnViewport();
+        var anchors = [];
+        var golden = Math.PI * (3 - Math.sqrt(5));
+
+        for (var i = 0; i < total; i++) {
+          var t = i / Math.max(total - 1, 1);
+          var radius = Math.sqrt(t) * 0.46;
+          var angle = i * golden + random(-0.22, 0.22);
+          anchors.push({
+            x: vp.centerX + Math.cos(angle) * radius * SPAWN_WIDTH,
+            y: vp.centerY + Math.sin(angle) * radius * SPAWN_HEIGHT,
+          });
+        }
+
+        return anchors;
+      }
+
+      function isValidPosition(rect, placed, prevY, index) {
+        if (index > 0 && Math.abs(rect.top + (rect.bottom - rect.top) / 2 - prevY) < MIN_Y_SEPARATION) {
+          return false;
+        }
+
+        for (var i = 0; i < placed.length; i++) {
+          if (rectsOverlap(rect, placed[i], COLLISION_PAD)) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      function findOpenPosition(width, height, placed, index, total, anchors, prevY) {
+        var vp = getSpawnViewport();
+        var halfW = width / 2;
+        var halfH = height / 2;
+        var anchor = anchors[index];
+        var progress = index / Math.max(total - 1, 1);
+        var jitter = 10 + progress * 95;
+
+        for (var attempt = 0; attempt < 320; attempt++) {
+          var cx = anchor.x + random(-jitter, jitter);
+          var cy = anchor.y + random(-jitter, jitter);
+          var clamped = clampToViewport(cx, cy, halfW, halfH, vp);
+          var rect = {
+            left: clamped.x - halfW,
+            top: clamped.y - halfH,
+            right: clamped.x + halfW,
+            bottom: clamped.y + halfH,
+          };
+
+          if (isValidPosition(rect, placed, prevY, index)) {
+            return { x: clamped.x, y: clamped.y, rect: rect };
+          }
+        }
+
+        for (var ring = 1; ring <= 12; ring++) {
+          for (var step = 0; step < 16; step++) {
+            var angle = (step / 16) * Math.PI * 2;
+            var cx = anchor.x + Math.cos(angle) * ring * 18;
+            var cy = anchor.y + Math.sin(angle) * ring * 18;
+            var clamped = clampToViewport(cx, cy, halfW, halfH, vp);
+            var rect = {
+              left: clamped.x - halfW,
+              top: clamped.y - halfH,
+              right: clamped.x + halfW,
+              bottom: clamped.y + halfH,
+            };
+
+            if (isValidPosition(rect, placed, prevY, index)) {
+              return { x: clamped.x, y: clamped.y, rect: rect };
+            }
+          }
+        }
+
+        var cols = 6;
+        var rows = 5;
+        for (var cell = 0; cell < cols * rows; cell++) {
+          var col = cell % cols;
+          var row = Math.floor(cell / cols);
+          var cx = vp.left + ((col + 0.5) / cols) * SPAWN_WIDTH;
+          var cy = vp.top + ((row + 0.5) / rows) * SPAWN_HEIGHT;
+          cx += random(-24, 24);
+          cy += random(-24, 24);
+          var clamped = clampToViewport(cx, cy, halfW, halfH, vp);
+          var rect = {
+            left: clamped.x - halfW,
+            top: clamped.y - halfH,
+            right: clamped.x + halfW,
+            bottom: clamped.y + halfH,
+          };
+
+          if (isValidPosition(rect, placed, prevY, index)) {
+            return { x: clamped.x, y: clamped.y, rect: rect };
+          }
+        }
+
+        var fallback = clampToViewport(anchor.x, anchor.y, halfW, halfH, vp);
+        return {
+          x: fallback.x,
+          y: fallback.y,
+          rect: {
+            left: fallback.x - halfW,
+            top: fallback.y - halfH,
+            right: fallback.x + halfW,
+            bottom: fallback.y + halfH,
+          },
+        };
+      }
 
       function slug(text) {
         return text.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -347,56 +503,6 @@
         buildColumn(colRight, FRAMEWORK.right);
       }
 
-      function findOpenPosition(width, height, placed) {
-        var padX = 110;
-        var padY = 95;
-        var maxX = scene.clientWidth - padX;
-        var maxY = scene.clientHeight - padY;
-        var halfW = width / 2;
-        var halfH = height / 2;
-
-        for (var attempt = 0; attempt < 240; attempt++) {
-          var cx = random(padX + halfW, maxX - halfW);
-          var cy = random(padY + halfH, maxY - halfH);
-          var rect = {
-            left: cx - halfW,
-            top: cy - halfH,
-            right: cx + halfW,
-            bottom: cy + halfH,
-          };
-          var hit = false;
-          for (var i = 0; i < placed.length; i++) {
-            if (rectsOverlap(rect, placed[i], COLLISION_PAD)) {
-              hit = true;
-              break;
-            }
-          }
-          if (!hit) {
-            return { x: cx, y: cy, rect: rect };
-          }
-        }
-
-        var cols = 5;
-        var rows = Math.ceil(placed.length / cols) + 1;
-        var cellW = (scene.clientWidth - padX * 2) / cols;
-        var cellH = (scene.clientHeight - padY * 2) / rows;
-        var index = placed.length;
-        var col = index % cols;
-        var row = Math.floor(index / cols);
-        var gx = padX + cellW * col + cellW / 2;
-        var gy = padY + cellH * row + cellH / 2;
-        return {
-          x: gx,
-          y: gy,
-          rect: {
-            left: gx - halfW,
-            top: gy - halfH,
-            right: gx + halfW,
-            bottom: gy + halfH,
-          },
-        };
-      }
-
       function createChaosNodes() {
         chaosLayer.innerHTML = "";
         var sorted = DISPLAY_PHRASES.slice().sort(function (a, b) {
@@ -408,8 +514,10 @@
 
         var nodes = [];
         var placed = [];
+        var anchors = buildSpawnAnchors(sorted.length);
+        var prevY = null;
 
-        sorted.forEach(function (item) {
+        sorted.forEach(function (item, index) {
           var node = document.createElement("div");
           node.className = "phrase-node";
           node.textContent = item.text;
@@ -423,8 +531,9 @@
 
           var width = node.offsetWidth;
           var height = node.offsetHeight;
-          var pos = findOpenPosition(width, height, placed);
+          var pos = findOpenPosition(width, height, placed, index, sorted.length, anchors, prevY);
           placed.push(pos.rect);
+          prevY = pos.y;
 
           node.style.left = pos.x + "px";
           node.style.top = pos.y + "px";
@@ -442,10 +551,10 @@
           return null;
         }
         var rect = slot.getBoundingClientRect();
-        var sceneRect = scene.getBoundingClientRect();
+        var stageRect = stage.getBoundingClientRect();
         return {
-          x: rect.left - sceneRect.left,
-          y: rect.top - sceneRect.top + rect.height / 2,
+          x: rect.left - stageRect.left,
+          y: rect.top - stageRect.top + rect.height / 2,
         };
       }
 
@@ -455,6 +564,7 @@
 
         var nodes = createChaosNodes();
         var titles = frameworkEl.querySelectorAll(".category-title");
+        var categoryItems = frameworkEl.querySelectorAll(".category-items");
 
         gsap.set(timerEl, { opacity: 0 });
 
@@ -467,15 +577,16 @@
         tl.to(timerEl, { opacity: 1, duration: 0.25 }, 0);
 
         nodes.forEach(function (node, index) {
-          tl.to(
+          tl.fromTo(
             node.el,
+            { scale: 0, opacity: 0 },
             {
               scale: 1,
               opacity: 1,
-              duration: 1,
-              ease: "back.out(1.6)",
+              duration: ZOOM_DURATION,
+              ease: "power2.out",
             },
-            index * 0.5
+            index * ZOOM_STAGGER
           );
         });
 
@@ -485,7 +596,7 @@
             return;
           }
 
-          var organizeStart = 9 + index * 0.11;
+          var organizeStart = ORGANIZE_START + index * 0.11;
 
           tl.to(
             node.el,
@@ -531,10 +642,20 @@
             stagger: 0.14,
             ease: "power2.out",
           },
-          9.2
+          ORGANIZE_START + 0.2
         );
 
-        tl.to({}, { duration: 0.2 }, 14);
+        tl.to(
+          categoryItems,
+          {
+            borderLeftColor: "rgba(56, 189, 248, 0.22)",
+            duration: 0.8,
+            ease: "sine.out",
+          },
+          LINES_AT
+        );
+
+        tl.to({}, { duration: 0.01 }, TOTAL_DURATION);
       }
 
       window.addEventListener("load", runAnimation);

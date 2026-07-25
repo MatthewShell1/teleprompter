@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Knowledge Web — Version 02</title>
+  <title>Knowledge Web — Version 04</title>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <style>
     * {
@@ -165,7 +165,7 @@
       gap: 0.2rem;
       margin-left: 1rem;
       padding-left: 0.75rem;
-      border-left: 2px solid rgba(56, 189, 248, 0.22);
+      border-left: 2px solid transparent;
     }
 
     .item-slot {
@@ -197,7 +197,7 @@
     <nav class="version-nav" aria-label="Animation versions">
       <a href="words.html">Original</a>
       <a href="words01.html">01</a>
-      <a href="words02.html" class="active">02</a>
+      <a href="words02.html">02</a>
       <a href="words03.html">03</a>
       <a href="words04.html">04</a>
       <a href="words05.html">05</a>
@@ -222,20 +222,27 @@
     (function () {
       "use strict";
 
+      var TOTAL_DURATION = 14;
+      var ZOOM_DURATION = 1;
+      var ZOOM_OVERLAP = 0.5;
+      var ZOOM_STAGGER = ZOOM_DURATION - ZOOM_OVERLAP;
+      var ORGANIZE_START = 9;
+      var LINES_AT = TOTAL_DURATION - 1;
+
       var DISPLAY_PHRASES = [
         { order: 1, text: "Gift ideas", category: "Personal" },
-        { order: 2, text: "Books I want to read", category: "Personal" },
+        { order: 2, text: "Books I want to read", category: "Entertainment" },
         { order: 3, text: "Stories from relatives", category: "Family" },
         { order: 4, text: "Home inventory", category: "Household" },
         { order: 5, text: "Job search", category: "Career" },
         { order: 6, text: "Long-term goals", category: "Personal" },
-        { order: 7, text: "Quotes", category: "Personal" },
+        { order: 7, text: "Quotes", category: "Entertainment" },
         { order: 8, text: "Concerts I've seen", category: "Personal" },
         { order: 8, text: "Warranty information", category: "Products" },
         { order: 9, text: "Home improvement ideas", category: "Household" },
         { order: 10, text: "Appliance manuals", category: "Products" },
         { order: 11, text: "Interview preparation", category: "Career" },
-        { order: 12, text: "Jokes", category: "Personal" },
+        { order: 12, text: "Jokes", category: "Entertainment" },
         { order: 13, text: "Maintenance schedules", category: "Household" },
         { order: 14, text: "Family traditions", category: "Family" },
         { order: 15, text: "Voting information", category: "Personal" },
@@ -251,16 +258,16 @@
               "Voting information",
               "Gift ideas",
               "Concerts I've seen",
-              "Books I want to read",
-              "Jokes",
-              "Quotes",
             ],
           },
           {
             title: "Family",
             items: ["Family traditions", "Stories from relatives"],
           },
-          { title: "Entertainment", items: [] },
+          {
+            title: "Entertainment",
+            items: ["Books I want to read", "Jokes", "Quotes"],
+          },
         ],
         right: [
           {
@@ -347,17 +354,28 @@
         buildColumn(colRight, FRAMEWORK.right);
       }
 
-      function findOpenPosition(width, height, placed) {
+      function findOpenPosition(width, height, placed, index, total) {
         var padX = 110;
         var padY = 95;
-        var maxX = scene.clientWidth - padX;
-        var maxY = scene.clientHeight - padY;
         var halfW = width / 2;
         var halfH = height / 2;
+        var centerX = scene.clientWidth / 2;
+        var centerY = scene.clientHeight / 2;
+        var minDim = Math.min(scene.clientWidth, scene.clientHeight);
+        var progress = index / Math.max(total - 1, 1);
+        var spread = Math.pow(progress, 1.25);
+        var maxRadius = (0.05 + spread * 0.42) * minDim * 0.48;
+        var minRadius = spread * 18;
 
-        for (var attempt = 0; attempt < 240; attempt++) {
-          var cx = random(padX + halfW, maxX - halfW);
-          var cy = random(padY + halfH, maxY - halfH);
+        for (var attempt = 0; attempt < 280; attempt++) {
+          var angle = random(0, Math.PI * 2);
+          var radius = minRadius + Math.random() * Math.max(maxRadius - minRadius, 24);
+          var cx = centerX + Math.cos(angle) * radius;
+          var cy = centerY + Math.sin(angle) * radius;
+
+          cx = Math.max(padX + halfW, Math.min(scene.clientWidth - padX - halfW, cx));
+          cy = Math.max(padY + halfH, Math.min(scene.clientHeight - padY - halfH, cy));
+
           var rect = {
             left: cx - halfW,
             top: cy - halfH,
@@ -380,9 +398,9 @@
         var rows = Math.ceil(placed.length / cols) + 1;
         var cellW = (scene.clientWidth - padX * 2) / cols;
         var cellH = (scene.clientHeight - padY * 2) / rows;
-        var index = placed.length;
-        var col = index % cols;
-        var row = Math.floor(index / cols);
+        var fallbackIndex = placed.length;
+        var col = fallbackIndex % cols;
+        var row = Math.floor(fallbackIndex / cols);
         var gx = padX + cellW * col + cellW / 2;
         var gy = padY + cellH * row + cellH / 2;
         return {
@@ -409,7 +427,7 @@
         var nodes = [];
         var placed = [];
 
-        sorted.forEach(function (item) {
+        sorted.forEach(function (item, index) {
           var node = document.createElement("div");
           node.className = "phrase-node";
           node.textContent = item.text;
@@ -423,7 +441,7 @@
 
           var width = node.offsetWidth;
           var height = node.offsetHeight;
-          var pos = findOpenPosition(width, height, placed);
+          var pos = findOpenPosition(width, height, placed, index, sorted.length);
           placed.push(pos.rect);
 
           node.style.left = pos.x + "px";
@@ -455,6 +473,7 @@
 
         var nodes = createChaosNodes();
         var titles = frameworkEl.querySelectorAll(".category-title");
+        var categoryItems = frameworkEl.querySelectorAll(".category-items");
 
         gsap.set(timerEl, { opacity: 0 });
 
@@ -467,15 +486,16 @@
         tl.to(timerEl, { opacity: 1, duration: 0.25 }, 0);
 
         nodes.forEach(function (node, index) {
-          tl.to(
+          tl.fromTo(
             node.el,
+            { scale: 0, opacity: 0 },
             {
               scale: 1,
               opacity: 1,
-              duration: 1,
-              ease: "back.out(1.6)",
+              duration: ZOOM_DURATION,
+              ease: "power2.out",
             },
-            index * 0.5
+            index * ZOOM_STAGGER
           );
         });
 
@@ -485,7 +505,7 @@
             return;
           }
 
-          var organizeStart = 9 + index * 0.11;
+          var organizeStart = ORGANIZE_START + index * 0.11;
 
           tl.to(
             node.el,
@@ -531,10 +551,20 @@
             stagger: 0.14,
             ease: "power2.out",
           },
-          9.2
+          ORGANIZE_START + 0.2
         );
 
-        tl.to({}, { duration: 0.2 }, 14);
+        tl.to(
+          categoryItems,
+          {
+            borderLeftColor: "rgba(56, 189, 248, 0.22)",
+            duration: 0.8,
+            ease: "sine.out",
+          },
+          LINES_AT
+        );
+
+        tl.to({}, { duration: 0.01 }, TOTAL_DURATION);
       }
 
       window.addEventListener("load", runAnimation);
