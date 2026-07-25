@@ -11,6 +11,8 @@
     fontFamily: document.getElementById("font-family"),
     fontSize: document.getElementById("font-size"),
     fontSizeValue: document.getElementById("font-size-value"),
+    textWidth: document.getElementById("text-width"),
+    textWidthValue: document.getElementById("text-width-value"),
     scrollSpeed: document.getElementById("scroll-speed"),
     speedValue: document.getElementById("speed-value"),
     flipHorizontal: document.getElementById("flip-horizontal"),
@@ -35,9 +37,11 @@
     controlsHidden: false,
     dragStartY: null,
     dragStartOffset: 0,
+    dragMoved: false,
   };
 
   const MANUAL_SCROLL_STEP = 80;
+  const CLICK_THRESHOLD_PX = 6;
 
   function syncContentFromInput() {
     els.content.textContent = els.scriptInput.value;
@@ -89,6 +93,15 @@
     const size = els.fontSize.value;
     els.fontSizeValue.textContent = size;
     els.content.style.fontSize = size + "px";
+  }
+
+  function applyTextWidth() {
+    const width = els.textWidth.value;
+    els.textWidthValue.textContent = width;
+    els.content.style.width = width + "%";
+    if (state.offsetY > getMaxScroll()) {
+      setOffsetY(getMaxScroll());
+    }
   }
 
   function applyColors() {
@@ -149,6 +162,7 @@
       }
       state.dragStartY = e.clientY;
       state.dragStartOffset = state.offsetY;
+      state.dragMoved = false;
       els.viewport.classList.add("is-dragging");
       if (els.viewport.setPointerCapture) {
         els.viewport.setPointerCapture(e.pointerId);
@@ -160,6 +174,12 @@
         return;
       }
       const delta = state.dragStartY - e.clientY;
+      if (Math.abs(delta) > CLICK_THRESHOLD_PX) {
+        state.dragMoved = true;
+      }
+      if (!state.dragMoved) {
+        return;
+      }
       setOffsetY(state.dragStartOffset + delta);
       if (state.playing) {
         state.lastTimestamp = null;
@@ -170,10 +190,15 @@
       if (state.dragStartY === null) {
         return;
       }
+      const wasClick = !state.dragMoved;
       state.dragStartY = null;
+      state.dragMoved = false;
       els.viewport.classList.remove("is-dragging");
       if (els.viewport.releasePointerCapture) {
         els.viewport.releasePointerCapture(e.pointerId);
+      }
+      if (wasClick) {
+        togglePlay();
       }
     }
 
@@ -281,6 +306,7 @@
 
     els.fontFamily.addEventListener("change", applyFontFamily);
     els.fontSize.addEventListener("input", applyFontSize);
+    els.textWidth.addEventListener("input", applyTextWidth);
     els.scrollSpeed.addEventListener("input", updateSpeedLabel);
     els.flipHorizontal.addEventListener("change", applyFlip);
     els.flipVertical.addEventListener("change", applyFlip);
@@ -368,6 +394,7 @@
     syncContentFromInput();
     applyFontFamily();
     applyFontSize();
+    applyTextWidth();
     applyColors();
     applyFlip();
     updateSpeedLabel();

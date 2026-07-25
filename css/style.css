@@ -134,7 +134,7 @@ body {
 /* Prompter viewport */
 .prompter-viewport {
   background: var(--viewport-bg);
-  cursor: grab;
+  cursor: pointer;
   touch-action: none;
   user-select: none;
 }
@@ -187,7 +187,8 @@ body {
 }
 
 .prompter-content {
-  width: min(90%, 900px);
+  width: 90%;
+  max-width: 100%;
   padding: 35vh 1.5rem 100vh;
   color: #ffffff;
   font-family: "Segoe UI", system-ui, sans-serif;
@@ -238,8 +239,6 @@ body {
 
 @media (max-width: 768px) {
   .prompter-content {
-    width: 95%;
-    font-size: 32px;
     padding-left: 1rem;
     padding-right: 1rem;
   }

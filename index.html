@@ -90,6 +90,13 @@ Adjust font, size, and speed using the controls below. Use the flip options when
               </div>
 
               <div class="col-sm-6 col-md-4">
+                <label for="text-width" class="form-label form-label-sm text-secondary mb-1">
+                  Text width <span id="text-width-value" class="text-light">90</span>%
+                </label>
+                <input type="range" id="text-width" class="form-range" min="30" max="100" value="90">
+              </div>
+
+              <div class="col-sm-6 col-md-4">
                 <label for="scroll-speed" class="form-label form-label-sm text-secondary mb-1">
                   Crawl speed <span id="speed-value" class="text-light">50</span>
                 </label>
@@ -131,7 +138,7 @@ Adjust font, size, and speed using the controls below. Use the flip options when
     </button>
 
     <!-- Prompter viewport -->
-    <main id="prompter-viewport" class="prompter-viewport flex-grow-1 position-relative overflow-hidden">
+    <main id="prompter-viewport" class="prompter-viewport flex-grow-1 position-relative overflow-hidden" title="Click to play or pause. Drag, scroll, or use Shift+arrow keys to move through the text.">
       <div id="reading-guide" class="reading-guide" aria-hidden="true"></div>
       <div id="prompter-stage" class="prompter-stage">
         <div id="prompter-content" class="prompter-content"></div>
