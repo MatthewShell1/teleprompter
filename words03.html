@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knowledge Web — Version 03</title>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #030712;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+
+    .version-nav {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.85rem;
+      z-index: 30;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 0.55rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .version-nav a {
+      color: rgba(125, 211, 252, 0.55);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .version-nav a:hover {
+      color: #7dd3fc;
+    }
+
+    .version-nav a.active {
+      color: #e0f2fe;
+      text-decoration: underline;
+    }
+
+    .scene {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(56, 189, 248, 0.07) 0%, transparent 42%),
+        linear-gradient(180deg, #020617 0%, #0f172a 52%, #020617 100%);
+    }
+
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(56, 189, 248, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(circle at center, black 18%, transparent 78%);
+      opacity: 0.65;
+    }
+
+    .chaos-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .phrase-node {
+      position: absolute;
+      width: max-content;
+      max-width: 240px;
+      padding: 0.7rem 0.9rem;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.88);
+      color: #e2e8f0;
+      font-size: 1.08rem;
+      line-height: 1.25;
+      text-align: center;
+      letter-spacing: 0.02em;
+      box-shadow:
+        0 0 20px rgba(56, 189, 248, 0.22),
+        0 8px 24px rgba(0, 0, 0, 0.35);
+      transform-origin: center center;
+      will-change: transform, opacity, left, top;
+    }
+
+    .phrase-node::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.75), rgba(168, 85, 247, 0.45));
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      opacity: 0.55;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .phrase-node.settled {
+      border-color: transparent;
+      background: transparent;
+      box-shadow: none;
+      padding-left: 0.55rem;
+      padding-right: 0.15rem;
+    }
+
+    .phrase-node.settled::before {
+      opacity: 0;
+    }
+
+    .framework {
+      position: absolute;
+      inset: 5.5rem 5rem 2rem;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .column {
+      width: min(42%, 360px);
+      display: flex;
+      flex-direction: column;
+      gap: 1.35rem;
+    }
+
+    .category {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .category-title {
+      font-size: 1.35rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #7dd3fc;
+      opacity: 0;
+      filter: blur(8px);
+      text-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+    }
+
+    .category-items {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
+      margin-left: 1rem;
+      padding-left: 0.75rem;
+      border-left: 2px solid transparent;
+    }
+
+    .item-slot {
+      width: fit-content;
+      max-width: 100%;
+      min-height: 2rem;
+      display: flex;
+      align-items: center;
+      padding: 0.15rem 0;
+      color: #cbd5e1;
+      font-size: 1.02rem;
+      line-height: 1.3;
+    }
+
+    .timer {
+      position: absolute;
+      right: 1.25rem;
+      bottom: 1rem;
+      z-index: 20;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(125, 211, 252, 0.55);
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" id="scene">
+    <nav class="version-nav" aria-label="Animation versions">
+      <a href="words.html">Original</a>
+      <a href="words01.html">01</a>
+      <a href="words02.html">02</a>
+      <a href="words03.html" class="active">03</a>
+    </nav>
+
+    <div class="grid"></div>
+
+    <div class="framework" id="framework">
+      <div class="column" id="col-left"></div>
+      <div class="column" id="col-right"></div>
+    </div>
+
+    <div class="chaos-layer" id="chaos"></div>
+    <div class="timer" id="timer">0.0s</div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var TOTAL_DURATION = 14;
+      var ZOOM_DURATION = 1;
+      var ZOOM_OVERLAP = 0.5;
+      var ZOOM_STAGGER = ZOOM_DURATION - ZOOM_OVERLAP;
+      var ORGANIZE_START = 9;
+      var LINES_AT = TOTAL_DURATION - 1;
+
+      var DISPLAY_PHRASES = [
+        { order: 1, text: "Gift ideas", category: "Personal" },
+        { order: 2, text: "Books I want to read", category: "Entertainment" },
+        { order: 3, text: "Stories from relatives", category: "Family" },
+        { order: 4, text: "Home inventory", category: "Household" },
+        { order: 5, text: "Job search", category: "Career" },
+        { order: 6, text: "Long-term goals", category: "Personal" },
+        { order: 7, text: "Quotes", category: "Entertainment" },
+        { order: 8, text: "Concerts I've seen", category: "Personal" },
+        { order: 8, text: "Warranty information", category: "Products" },
+        { order: 9, text: "Home improvement ideas", category: "Household" },
+        { order: 10, text: "Appliance manuals", category: "Products" },
+        { order: 11, text: "Interview preparation", category: "Career" },
+        { order: 12, text: "Jokes", category: "Entertainment" },
+        { order: 13, text: "Maintenance schedules", category: "Household" },
+        { order: 14, text: "Family traditions", category: "Family" },
+        { order: 15, text: "Voting information", category: "Personal" },
+        { order: 16, text: "Emergency preparedness", category: "Household" },
+      ];
+
+      var FRAMEWORK = {
+        left: [
+          {
+            title: "Personal",
+            items: [
+              "Long-term goals",
+              "Voting information",
+              "Gift ideas",
+              "Concerts I've seen",
+            ],
+          },
+          {
+            title: "Family",
+            items: ["Family traditions", "Stories from relatives"],
+          },
+          {
+            title: "Entertainment",
+            items: ["Books I want to read", "Jokes", "Quotes"],
+          },
+        ],
+        right: [
+          {
+            title: "Household",
+            items: [
+              "Home inventory",
+              "Home improvement ideas",
+              "Maintenance schedules",
+              "Emergency preparedness",
+            ],
+          },
+          {
+            title: "Products",
+            items: ["Appliance manuals", "Warranty information"],
+          },
+          {
+            title: "Career",
+            items: ["Interview preparation", "Job search"],
+          },
+          { title: "Retirement", items: [] },
+        ],
+      };
+
+      var scene = document.getElementById("scene");
+      var chaosLayer = document.getElementById("chaos");
+      var frameworkEl = document.getElementById("framework");
+      var colLeft = document.getElementById("col-left");
+      var colRight = document.getElementById("col-right");
+      var timerEl = document.getElementById("timer");
+
+      var COLLISION_PAD = 18;
+
+      function slug(text) {
+        return text.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      }
+
+      function random(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
+      function rectsOverlap(a, b, pad) {
+        return !(
+          a.right + pad < b.left ||
+          a.left > b.right + pad ||
+          a.bottom + pad < b.top ||
+          a.top > b.bottom + pad
+        );
+      }
+
+      function buildFramework() {
+        colLeft.innerHTML = "";
+        colRight.innerHTML = "";
+
+        function buildColumn(parent, sections) {
+          sections.forEach(function (section) {
+            var cat = document.createElement("section");
+            cat.className = "category";
+
+            var title = document.createElement("h2");
+            title.className = "category-title";
+            title.textContent = section.title;
+            cat.appendChild(title);
+
+            if (section.items.length > 0) {
+              var itemsWrap = document.createElement("div");
+              itemsWrap.className = "category-items";
+
+              section.items.forEach(function (itemText) {
+                var slot = document.createElement("div");
+                slot.className = "item-slot";
+                slot.dataset.phrase = itemText;
+                slot.id = "slot-" + slug(itemText);
+                itemsWrap.appendChild(slot);
+              });
+
+              cat.appendChild(itemsWrap);
+            }
+
+            parent.appendChild(cat);
+          });
+        }
+
+        buildColumn(colLeft, FRAMEWORK.left);
+        buildColumn(colRight, FRAMEWORK.right);
+      }
+
+      function findOpenPosition(width, height, placed) {
+        var padX = 110;
+        var padY = 95;
+        var maxX = scene.clientWidth - padX;
+        var maxY = scene.clientHeight - padY;
+        var halfW = width / 2;
+        var halfH = height / 2;
+
+        for (var attempt = 0; attempt < 240; attempt++) {
+          var cx = random(padX + halfW, maxX - halfW);
+          var cy = random(padY + halfH, maxY - halfH);
+          var rect = {
+            left: cx - halfW,
+            top: cy - halfH,
+            right: cx + halfW,
+            bottom: cy + halfH,
+          };
+          var hit = false;
+          for (var i = 0; i < placed.length; i++) {
+            if (rectsOverlap(rect, placed[i], COLLISION_PAD)) {
+              hit = true;
+              break;
+            }
+          }
+          if (!hit) {
+            return { x: cx, y: cy, rect: rect };
+          }
+        }
+
+        var cols = 5;
+        var rows = Math.ceil(placed.length / cols) + 1;
+        var cellW = (scene.clientWidth - padX * 2) / cols;
+        var cellH = (scene.clientHeight - padY * 2) / rows;
+        var index = placed.length;
+        var col = index % cols;
+        var row = Math.floor(index / cols);
+        var gx = padX + cellW * col + cellW / 2;
+        var gy = padY + cellH * row + cellH / 2;
+        return {
+          x: gx,
+          y: gy,
+          rect: {
+            left: gx - halfW,
+            top: gy - halfH,
+            right: gx + halfW,
+            bottom: gy + halfH,
+          },
+        };
+      }
+
+      function createChaosNodes() {
+        chaosLayer.innerHTML = "";
+        var sorted = DISPLAY_PHRASES.slice().sort(function (a, b) {
+          if (a.order !== b.order) {
+            return a.order - b.order;
+          }
+          return a.text.localeCompare(b.text);
+        });
+
+        var nodes = [];
+        var placed = [];
+
+        sorted.forEach(function (item) {
+          var node = document.createElement("div");
+          node.className = "phrase-node";
+          node.textContent = item.text;
+          node.dataset.phrase = item.text;
+          node.style.left = "50%";
+          node.style.top = "50%";
+          node.style.visibility = "hidden";
+          chaosLayer.appendChild(node);
+
+          gsap.set(node, { xPercent: -50, yPercent: -50, scale: 1, opacity: 1 });
+
+          var width = node.offsetWidth;
+          var height = node.offsetHeight;
+          var pos = findOpenPosition(width, height, placed);
+          placed.push(pos.rect);
+
+          node.style.left = pos.x + "px";
+          node.style.top = pos.y + "px";
+          gsap.set(node, { scale: 0, opacity: 0, visibility: "visible" });
+
+          nodes.push({ el: node, data: item, spawn: pos });
+        });
+
+        return nodes;
+      }
+
+      function slotTarget(phrase) {
+        var slot = document.getElementById("slot-" + slug(phrase));
+        if (!slot) {
+          return null;
+        }
+        var rect = slot.getBoundingClientRect();
+        var sceneRect = scene.getBoundingClientRect();
+        return {
+          x: rect.left - sceneRect.left,
+          y: rect.top - sceneRect.top + rect.height / 2,
+        };
+      }
+
+      function runAnimation() {
+        buildFramework();
+        gsap.set(frameworkEl, { opacity: 1 });
+
+        var nodes = createChaosNodes();
+        var titles = frameworkEl.querySelectorAll(".category-title");
+        var categoryItems = frameworkEl.querySelectorAll(".category-items");
+
+        gsap.set(timerEl, { opacity: 0 });
+
+        var tl = gsap.timeline({
+          onUpdate: function () {
+            timerEl.textContent = tl.time().toFixed(1) + "s";
+          },
+        });
+
+        tl.to(timerEl, { opacity: 1, duration: 0.25 }, 0);
+
+        nodes.forEach(function (node, index) {
+          tl.fromTo(
+            node.el,
+            { scale: 0, opacity: 0 },
+            {
+              scale: 1,
+              opacity: 1,
+              duration: ZOOM_DURATION,
+              ease: "power2.out",
+            },
+            index * ZOOM_STAGGER
+          );
+        });
+
+        nodes.forEach(function (node, index) {
+          var target = slotTarget(node.data.text);
+          if (!target) {
+            return;
+          }
+
+          var organizeStart = ORGANIZE_START + index * 0.11;
+
+          tl.to(
+            node.el,
+            {
+              left: target.x,
+              top: target.y,
+              xPercent: 0,
+              yPercent: -50,
+              scale: 1,
+              textAlign: "left",
+              maxWidth: "100%",
+              duration: 1.35,
+              ease: "power3.inOut",
+            },
+            organizeStart
+          );
+
+          tl.to(
+            node.el,
+            {
+              borderColor: "rgba(56, 189, 248, 0)",
+              backgroundColor: "rgba(15, 23, 42, 0)",
+              boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
+              borderRadius: "0.2rem",
+              paddingRight: "0.15rem",
+              duration: 0.9,
+              ease: "sine.inOut",
+            },
+            organizeStart + 0.15
+          );
+
+          tl.add(function () {
+            node.el.classList.add("settled");
+          }, organizeStart + 0.95);
+        });
+
+        tl.to(
+          titles,
+          {
+            opacity: 1,
+            filter: "blur(0px)",
+            duration: 1.6,
+            stagger: 0.14,
+            ease: "power2.out",
+          },
+          ORGANIZE_START + 0.2
+        );
+
+        tl.to(
+          categoryItems,
+          {
+            borderLeftColor: "rgba(56, 189, 248, 0.22)",
+            duration: 0.8,
+            ease: "sine.out",
+          },
+          LINES_AT
+        );
+
+        tl.to({}, { duration: 0.01 }, TOTAL_DURATION);
+      }
+
+      window.addEventListener("load", runAnimation);
+    })();
+  </script>
+</body>
+</html>

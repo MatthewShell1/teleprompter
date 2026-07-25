@@ -21,6 +21,34 @@
       font-family: "Segoe UI", system-ui, sans-serif;
     }
 
+    .version-nav {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.85rem;
+      z-index: 20;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 0.55rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .version-nav a {
+      color: rgba(125, 211, 252, 0.55);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .version-nav a:hover {
+      color: #7dd3fc;
+    }
+
+    .version-nav a.active {
+      color: #e0f2fe;
+      text-decoration: underline;
+    }
+
     .scene {
       position: relative;
       width: 100%;
@@ -176,6 +204,12 @@
 </head>
 <body>
   <div class="scene" id="scene">
+    <nav class="version-nav" aria-label="Animation versions">
+      <a href="words.html" class="active">Original</a>
+      <a href="words01.html">01</a>
+      <a href="words02.html">02</a>
+      <a href="words03.html">03</a>
+    </nav>
     <div class="grid"></div>
     <div class="scanline"></div>
 

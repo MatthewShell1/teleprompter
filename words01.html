@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knowledge Web — Version 01</title>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #030712;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+
+    .version-nav {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.85rem;
+      z-index: 30;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 0.55rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .version-nav a {
+      color: rgba(125, 211, 252, 0.55);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .version-nav a:hover {
+      color: #7dd3fc;
+    }
+
+    .version-nav a.active {
+      color: #e0f2fe;
+      text-decoration: underline;
+    }
+
+    .scene {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(56, 189, 248, 0.07) 0%, transparent 42%),
+        linear-gradient(180deg, #020617 0%, #0f172a 52%, #020617 100%);
+    }
+
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(56, 189, 248, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(circle at center, black 18%, transparent 78%);
+      opacity: 0.65;
+    }
+
+    .chaos-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .phrase-node {
+      position: absolute;
+      max-width: 220px;
+      padding: 0.7rem 0.9rem;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.88);
+      color: #e2e8f0;
+      font-size: 1.08rem;
+      line-height: 1.25;
+      text-align: center;
+      letter-spacing: 0.02em;
+      box-shadow:
+        0 0 20px rgba(56, 189, 248, 0.22),
+        0 8px 24px rgba(0, 0, 0, 0.35);
+      transform-origin: center center;
+      will-change: transform, opacity, left, top;
+    }
+
+    .phrase-node::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.75), rgba(168, 85, 247, 0.45));
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .framework {
+      position: absolute;
+      inset: 5.5rem 2.5rem 2rem;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem 3rem;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    .category {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .category-title {
+      font-size: 1.35rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #7dd3fc;
+      opacity: 0;
+      filter: blur(8px);
+      text-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+      margin-bottom: 0.15rem;
+    }
+
+    .category-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-left: 1.1rem;
+      padding-left: 0.85rem;
+      border-left: 2px solid rgba(56, 189, 248, 0.22);
+    }
+
+    .item-slot {
+      min-height: 2.35rem;
+      display: flex;
+      align-items: center;
+      padding: 0.3rem 0.55rem;
+      color: #cbd5e1;
+      font-size: 1.02rem;
+      line-height: 1.3;
+    }
+
+    .item-slot.static-item {
+      opacity: 0;
+    }
+
+    .timer {
+      position: absolute;
+      right: 1.25rem;
+      bottom: 1rem;
+      z-index: 20;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(125, 211, 252, 0.55);
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" id="scene">
+    <nav class="version-nav" aria-label="Animation versions">
+      <a href="words.html">Original</a>
+      <a href="words01.html" class="active">01</a>
+      <a href="words02.html">02</a>
+      <a href="words03.html">03</a>
+    </nav>
+
+    <div class="grid"></div>
+
+    <div class="framework" id="framework">
+      <div class="column" id="col-left"></div>
+      <div class="column" id="col-right"></div>
+    </div>
+
+    <div class="chaos-layer" id="chaos"></div>
+    <div class="timer" id="timer">0.0s</div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var DISPLAY_PHRASES = [
+        { order: 1, text: "Gift ideas", category: "Personal" },
+        { order: 2, text: "Books I want to read", category: "Personal" },
+        { order: 3, text: "Stories from relatives", category: "Family" },
+        { order: 4, text: "Home inventory", category: "Household" },
+        { order: 5, text: "Job search", category: "Career" },
+        { order: 6, text: "Long-term goals", category: "Personal" },
+        { order: 7, text: "Quotes", category: "Personal" },
+        { order: 8, text: "Concerts I've seen", category: "Personal" },
+        { order: 8, text: "Warranty information", category: "Products" },
+        { order: 9, text: "Home improvement ideas", category: "Household" },
+        { order: 10, text: "Appliance manuals", category: "Products" },
+        { order: 11, text: "Interview preparation", category: "Career" },
+        { order: 12, text: "Jokes", category: "Personal" },
+        { order: 13, text: "Maintenance schedules", category: "Household" },
+        { order: 14, text: "Family traditions", category: "Family" },
+        { order: 15, text: "Voting information", category: "Personal" },
+        { order: 16, text: "Emergency preparedness", category: "Household" },
+      ];
+
+      var FRAMEWORK = {
+        left: [
+          {
+            title: "Personal",
+            items: [
+              "Long-term goals",
+              "Voting information",
+              "Gift ideas",
+              "Concerts I've seen",
+              "Entertainment",
+              "Books I want to read",
+              "Jokes",
+              "Quotes",
+            ],
+          },
+          {
+            title: "Family",
+            items: ["Family traditions", "Stories from relatives"],
+          },
+        ],
+        right: [
+          {
+            title: "Household",
+            items: [
+              "Home inventory",
+              "Home improvement ideas",
+              "Maintenance schedules",
+              "Emergency preparedness",
+            ],
+          },
+          {
+            title: "Products",
+            items: ["Appliance manuals", "Warranty information"],
+          },
+          {
+            title: "Career",
+            items: ["Interview preparation", "Job search", "Retirement"],
+          },
+        ],
+      };
+
+      var scene = document.getElementById("scene");
+      var chaosLayer = document.getElementById("chaos");
+      var frameworkEl = document.getElementById("framework");
+      var colLeft = document.getElementById("col-left");
+      var colRight = document.getElementById("col-right");
+      var timerEl = document.getElementById("timer");
+
+      var STATIC_ITEMS = ["Entertainment", "Retirement"];
+
+      function slug(text) {
+        return text.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      }
+
+      function random(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
+      function buildFramework() {
+        colLeft.innerHTML = "";
+        colRight.innerHTML = "";
+
+        function buildColumn(parent, sections) {
+          sections.forEach(function (section) {
+            var cat = document.createElement("section");
+            cat.className = "category";
+
+            var title = document.createElement("h2");
+            title.className = "category-title";
+            title.textContent = section.title;
+            cat.appendChild(title);
+
+            var itemsWrap = document.createElement("div");
+            itemsWrap.className = "category-items";
+
+            section.items.forEach(function (itemText) {
+              var slot = document.createElement("div");
+              slot.className = "item-slot";
+              slot.dataset.phrase = itemText;
+              slot.id = "slot-" + slug(itemText);
+
+              if (STATIC_ITEMS.indexOf(itemText) !== -1) {
+                slot.classList.add("static-item");
+                slot.textContent = itemText;
+              }
+
+              itemsWrap.appendChild(slot);
+            });
+
+            cat.appendChild(itemsWrap);
+            parent.appendChild(cat);
+          });
+        }
+
+        buildColumn(colLeft, FRAMEWORK.left);
+        buildColumn(colRight, FRAMEWORK.right);
+      }
+
+      function getSpawnPoint() {
+        var padX = 120;
+        var padY = 100;
+        return {
+          x: random(padX, scene.clientWidth - padX),
+          y: random(padY, scene.clientHeight - padY),
+        };
+      }
+
+      function createChaosNodes() {
+        chaosLayer.innerHTML = "";
+        var nodes = [];
+
+        DISPLAY_PHRASES.slice()
+          .sort(function (a, b) {
+            if (a.order !== b.order) {
+              return a.order - b.order;
+            }
+            return a.text.localeCompare(b.text);
+          })
+          .forEach(function (item) {
+            var spawn = getSpawnPoint();
+            var node = document.createElement("div");
+            node.className = "phrase-node";
+            node.textContent = item.text;
+            node.dataset.phrase = item.text;
+            node.style.left = spawn.x + "px";
+            node.style.top = spawn.y + "px";
+            chaosLayer.appendChild(node);
+
+            gsap.set(node, {
+              xPercent: -50,
+              yPercent: -50,
+              scale: 0,
+              opacity: 0,
+            });
+
+            nodes.push({ el: node, data: item, spawn: spawn });
+          });
+
+        return nodes;
+      }
+
+      function slotTarget(phrase) {
+        var slot = document.getElementById("slot-" + slug(phrase));
+        if (!slot) {
+          return null;
+        }
+        var rect = slot.getBoundingClientRect();
+        var sceneRect = scene.getBoundingClientRect();
+        return {
+          x: rect.left - sceneRect.left,
+          y: rect.top - sceneRect.top + rect.height / 2,
+          width: rect.width,
+        };
+      }
+
+      function runAnimation() {
+        buildFramework();
+        gsap.set(frameworkEl, { opacity: 1 });
+
+        var nodes = createChaosNodes();
+        var titles = frameworkEl.querySelectorAll(".category-title");
+        var staticItems = frameworkEl.querySelectorAll(".static-item");
+
+        gsap.set(timerEl, { opacity: 0 });
+
+        var tl = gsap.timeline({
+          onUpdate: function () {
+            timerEl.textContent = tl.time().toFixed(1) + "s";
+          },
+        });
+
+        tl.to(timerEl, { opacity: 1, duration: 0.25 }, 0);
+
+        nodes.forEach(function (node, index) {
+          var startTime = index * 0.5;
+          tl.to(
+            node.el,
+            {
+              scale: 1,
+              opacity: 1,
+              duration: 1,
+              ease: "back.out(1.6)",
+            },
+            startTime
+          );
+        });
+
+        nodes.forEach(function (node, index) {
+          var target = slotTarget(node.data.text);
+          if (!target) {
+            return;
+          }
+
+          var organizeStart = 9 + index * 0.11;
+
+          tl.to(
+            node.el,
+            {
+              left: target.x,
+              top: target.y,
+              width: target.width,
+              maxWidth: target.width,
+              xPercent: 0,
+              yPercent: -50,
+              scale: 1,
+              textAlign: "left",
+              paddingLeft: "0.55rem",
+              paddingRight: "0.5rem",
+              duration: 1.35,
+              ease: "power3.inOut",
+            },
+            organizeStart
+          );
+
+          tl.to(
+            node.el,
+            {
+              borderRadius: "0.35rem",
+              backgroundColor: "rgba(15, 23, 42, 0.55)",
+              boxShadow: "0 0 10px rgba(56, 189, 248, 0.12)",
+              duration: 0.8,
+              ease: "sine.inOut",
+            },
+            organizeStart + 0.35
+          );
+        });
+
+        tl.to(
+          titles,
+          {
+            opacity: 1,
+            filter: "blur(0px)",
+            duration: 1.6,
+            stagger: 0.18,
+            ease: "power2.out",
+          },
+          9.2
+        );
+
+        tl.to(
+          staticItems,
+          {
+            opacity: 1,
+            duration: 1.1,
+            stagger: 0.2,
+            ease: "sine.out",
+          },
+          10.2
+        );
+
+        tl.to(
+          ".phrase-node",
+          {
+            boxShadow: "0 0 16px rgba(56, 189, 248, 0.18)",
+            duration: 0.8,
+            ease: "sine.inOut",
+          },
+          13
+        );
+
+        tl.to({}, { duration: 0.2 }, 14);
+      }
+
+      window.addEventListener("load", runAnimation);
+    })();
+  </script>
+</body>
+</html>
