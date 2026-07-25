@@ -33,7 +33,11 @@
     lastTimestamp: null,
     rafId: null,
     controlsHidden: false,
+    dragStartY: null,
+    dragStartOffset: 0,
   };
+
+  const MANUAL_SCROLL_STEP = 80;
 
   function syncContentFromInput() {
     els.content.textContent = els.scriptInput.value;
@@ -69,10 +73,7 @@
       if (message === "Failed to fetch") {
         message =
           "Could not reach the wiki (network or CORS restriction). " +
-          "Private wikis require config/wiki.local.php on the server.";
-      } else if (message.indexOf("read permission") !== -1) {
-        message =
-          "That wiki requires login. Configure config/wiki.local.php on the server with a bot password, then reload.";
+          "Private wikis use api/fetch-wiki.php on this server.";
       }
       setWikiStatus(message, "error");
     } finally {
@@ -123,6 +124,61 @@
   function setOffsetY(y) {
     state.offsetY = Math.max(0, Math.min(y, getMaxScroll()));
     applyTransform();
+  }
+
+  function nudgeScroll(deltaY) {
+    setOffsetY(state.offsetY + deltaY);
+    if (state.playing) {
+      state.lastTimestamp = null;
+    }
+  }
+
+  function bindManualScroll() {
+    els.viewport.addEventListener(
+      "wheel",
+      function (e) {
+        e.preventDefault();
+        nudgeScroll(e.deltaY);
+      },
+      { passive: false }
+    );
+
+    els.viewport.addEventListener("pointerdown", function (e) {
+      if (e.pointerType === "mouse" && e.button !== 0) {
+        return;
+      }
+      state.dragStartY = e.clientY;
+      state.dragStartOffset = state.offsetY;
+      els.viewport.classList.add("is-dragging");
+      if (els.viewport.setPointerCapture) {
+        els.viewport.setPointerCapture(e.pointerId);
+      }
+    });
+
+    els.viewport.addEventListener("pointermove", function (e) {
+      if (state.dragStartY === null) {
+        return;
+      }
+      const delta = state.dragStartY - e.clientY;
+      setOffsetY(state.dragStartOffset + delta);
+      if (state.playing) {
+        state.lastTimestamp = null;
+      }
+    });
+
+    function endDrag(e) {
+      if (state.dragStartY === null) {
+        return;
+      }
+      state.dragStartY = null;
+      els.viewport.classList.remove("is-dragging");
+      if (els.viewport.releasePointerCapture) {
+        els.viewport.releasePointerCapture(e.pointerId);
+      }
+    }
+
+    els.viewport.addEventListener("pointerup", endDrag);
+    els.viewport.addEventListener("pointercancel", endDrag);
   }
 
   function resetScroll() {
@@ -264,12 +320,30 @@
           e.preventDefault();
           reset();
           break;
+        case "PageUp":
+          e.preventDefault();
+          nudgeScroll(-MANUAL_SCROLL_STEP * 3);
+          break;
+        case "PageDown":
+          e.preventDefault();
+          nudgeScroll(MANUAL_SCROLL_STEP * 3);
+          break;
         case "ArrowUp":
+          if (e.shiftKey) {
+            e.preventDefault();
+            nudgeScroll(-MANUAL_SCROLL_STEP);
+            break;
+          }
           e.preventDefault();
           els.scrollSpeed.value = Math.min(200, Number(els.scrollSpeed.value) + 5);
           updateSpeedLabel();
           break;
         case "ArrowDown":
+          if (e.shiftKey) {
+            e.preventDefault();
+            nudgeScroll(MANUAL_SCROLL_STEP);
+            break;
+          }
           e.preventDefault();
           els.scrollSpeed.value = Math.max(10, Number(els.scrollSpeed.value) - 5);
           updateSpeedLabel();
@@ -298,6 +372,7 @@
     applyFlip();
     updateSpeedLabel();
     bindEvents();
+    bindManualScroll();
     initFromQueryString();
   }
 

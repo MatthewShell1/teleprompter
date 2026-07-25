@@ -36,7 +36,7 @@ sudo dnf install -y git
 Copy `scripts/ec2-setup.sh` to the server (or paste its contents), then:
 
 ```bash
-bash ec2-setup.sh /var/www/html/teleprompter git@github.com:MatthewShell1/teleprompter.git
+bash ec2-setup.sh /var/www/html/mshell-net/teleprompter git@github.com:MatthewShell1/teleprompter.git
 ```
 
 Adjust the path to match where Apache should serve the teleprompter files.
@@ -44,8 +44,8 @@ Adjust the path to match where Apache should serve the teleprompter files.
 ### Apache example (optional)
 
 ```apache
-Alias /teleprompter /var/www/html/teleprompter
-<Directory /var/www/html/teleprompter>
+Alias /teleprompter /var/www/html/mshell-net/teleprompter
+<Directory /var/www/html/mshell-net/teleprompter>
     Options Indexes FollowSymLinks
     AllowOverride None
     Require all granted
@@ -81,8 +81,8 @@ chmod 600 ~/.ssh/authorized_keys
 Give the deploy user write access to the deploy path:
 
 ```bash
-sudo chown -R ec2-user:apache /var/www/html/teleprompter
-sudo chmod -R g+w /var/www/html/teleprompter
+sudo chown -R ec2-user:apache /var/www/html/mshell-net/teleprompter
+sudo chmod -R g+w /var/www/html/mshell-net/teleprompter
 ```
 
 For a **private** GitHub repo, also add a read-only deploy key in GitHub repo settings, or configure the server with a GitHub PAT / SSH key that can `git fetch`.
@@ -96,7 +96,7 @@ In the repository on GitHub: **Settings → Secrets and variables → Actions �
 | `EC2_HOST` | `3.15.123.45` or `teleprompter.example.com` | Public hostname or IP of the EC2 instance |
 | `EC2_USER` | `ec2-user` | SSH login user |
 | `EC2_SSH_KEY` | contents of `teleprompter_deploy` (private key) | Private key for SSH |
-| `EC2_DEPLOY_PATH` | `/var/www/html/teleprompter` | Directory containing the git clone |
+| `EC2_DEPLOY_PATH` | `/var/www/html/mshell-net/teleprompter` | Directory containing the git clone |
 | `EC2_SSH_PORT` | `22` | Optional; omit if using default port |
 
 ## 5. Test deployment

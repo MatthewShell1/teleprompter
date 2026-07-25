@@ -5,11 +5,11 @@
 #
 # Usage:
 #   sudo dnf install -y git
-#   bash ec2-setup.sh /var/www/html/teleprompter git@github.com:MatthewShell1/teleprompter.git
+#   bash ec2-setup.sh /var/www/html/mshell-net/teleprompter git@github.com:MatthewShell1/teleprompter.git
 #
 set -euo pipefail
 
-DEPLOY_PATH="${1:-/var/www/html/teleprompter}"
+DEPLOY_PATH="${1:-/var/www/html/mshell-net/teleprompter}"
 REPO_URL="${2:-git@github.com:MatthewShell1/teleprompter.git}"
 
 if ! command -v git >/dev/null 2>&1; then

@@ -16,3 +16,7 @@ return [
         ],
     ],
 ];
+
+// After creating wiki.local.php on EC2, Apache must be able to read it:
+//   sudo chgrp apache config/wiki.local.php
+//   sudo chmod 640 config/wiki.local.php

@@ -139,25 +139,33 @@
   }
 
   async function fetchPageTextViaProxy(pageUrl, originalError) {
-    const response = await fetch("api/fetch-wiki.php", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-      },
-      body: new URLSearchParams({ url: pageUrl }),
-    });
+    let response;
+    try {
+      response = await fetch("api/fetch-wiki.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        },
+        body: new URLSearchParams({ url: pageUrl }),
+      });
+    } catch (_err) {
+      throw new Error(
+        "Could not reach api/fetch-wiki.php on this server. " +
+          (originalError ? originalError.message : "Network error.")
+      );
+    }
 
+    const rawBody = await response.text();
     let data;
     try {
-      data = await response.json();
+      data = JSON.parse(rawBody);
     } catch (_err) {
-      throw originalError;
+      throw new Error(
+        "Server proxy returned an invalid response (HTTP " + response.status + "). Check Apache/PHP error logs."
+      );
     }
 
     if (!response.ok || data.error) {
-      if (response.status === 503 && originalError) {
-        throw originalError;
-      }
       throw new Error(data.error || "Could not load page through the server proxy.");
     }
 

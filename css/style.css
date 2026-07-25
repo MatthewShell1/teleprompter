@@ -134,6 +134,13 @@ body {
 /* Prompter viewport */
 .prompter-viewport {
   background: var(--viewport-bg);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.prompter-viewport.is-dragging {
+  cursor: grabbing;
 }
 
 .reading-guide {

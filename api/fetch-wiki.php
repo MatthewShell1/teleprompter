@@ -16,9 +16,30 @@ if ($pageUrl === '') {
     exit;
 }
 
-$configPath = dirname(__DIR__) . '/config/wiki.local.php';
-if (!is_readable($configPath)) {
+$configCandidates = [
+    dirname(__DIR__) . '/config/wiki.local.php',
+    '/etc/teleprompter/wiki.local.php',
+];
+
+$configPath = null;
+foreach ($configCandidates as $candidate) {
+    if (is_readable($candidate)) {
+        $configPath = $candidate;
+        break;
+    }
+}
+
+if ($configPath === null) {
+    $defaultPath = dirname(__DIR__) . '/config/wiki.local.php';
     http_response_code(503);
+
+    if (file_exists($defaultPath) && !is_readable($defaultPath)) {
+        echo json_encode([
+            'error' => 'config/wiki.local.php exists but Apache cannot read it. Run: sudo chgrp apache config/wiki.local.php && sudo chmod 640 config/wiki.local.php',
+        ]);
+        exit;
+    }
+
     echo json_encode([
         'error' => 'Private wiki proxy is not configured. Copy config/wiki.local.php.example to config/wiki.local.php on the server.',
     ]);
