@@ -69,7 +69,10 @@
       if (message === "Failed to fetch") {
         message =
           "Could not reach the wiki (network or CORS restriction). " +
-          "Public wikis like Wikipedia usually work; private wikis may block browser requests.";
+          "Private wikis require config/wiki.local.php on the server.";
+      } else if (message.indexOf("read permission") !== -1) {
+        message =
+          "That wiki requires login. Configure config/wiki.local.php on the server with a bot password, then reload.";
       }
       setWikiStatus(message, "error");
     } finally {

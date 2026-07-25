@@ -124,14 +124,51 @@
       result = await fetchPageText(parsed.apiUrl, parsed.pageTitle);
     } catch (err) {
       if (parsed.apiUrl.endsWith("/w/api.php")) {
-        const fallbackApi = parsed.apiUrl.replace("/w/api.php", "/api.php");
-        result = await fetchPageText(fallbackApi, parsed.pageTitle);
+        try {
+          const fallbackApi = parsed.apiUrl.replace("/w/api.php", "/api.php");
+          result = await fetchPageText(fallbackApi, parsed.pageTitle);
+        } catch (fallbackErr) {
+          return fetchPageTextViaProxy(pageUrl, fallbackErr);
+        }
       } else {
-        throw err;
+        return fetchPageTextViaProxy(pageUrl, err);
       }
     }
 
     return result;
+  }
+
+  async function fetchPageTextViaProxy(pageUrl, originalError) {
+    const response = await fetch("api/fetch-wiki.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      },
+      body: new URLSearchParams({ url: pageUrl }),
+    });
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (_err) {
+      throw originalError;
+    }
+
+    if (!response.ok || data.error) {
+      if (response.status === 503 && originalError) {
+        throw originalError;
+      }
+      throw new Error(data.error || "Could not load page through the server proxy.");
+    }
+
+    if (!data.text) {
+      throw new Error("No page content was returned.");
+    }
+
+    return {
+      title: data.title || pageUrl,
+      text: data.text,
+    };
   }
 
   global.MediaWikiLoader = {

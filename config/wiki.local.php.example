@@ -1,0 +1,18 @@
+<?php
+/**
+ * Copy to wiki.local.php and fill in your private wiki credentials.
+ * wiki.local.php is not committed to git.
+ */
+return [
+    'allowed_hosts' => [
+        'k.mshell.net',
+    ],
+    'wikis' => [
+        'k.mshell.net' => [
+            'api_url' => 'https://k.mshell.net/api.php',
+            // Bot password format: Username@BotPasswordName
+            'username' => 'YourWikiUser@TeleprompterBot',
+            'password' => 'your-bot-password-here',
+        ],
+    ],
+];
