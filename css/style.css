@@ -99,6 +99,14 @@ body {
   color: #ea868f;
 }
 
+.speed-control .speed-value {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
 .form-range {
   height: 0.35rem;
 }

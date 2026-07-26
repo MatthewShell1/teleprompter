@@ -13,8 +13,9 @@
     fontSizeValue: document.getElementById("font-size-value"),
     textWidth: document.getElementById("text-width"),
     textWidthValue: document.getElementById("text-width-value"),
-    scrollSpeed: document.getElementById("scroll-speed"),
-    speedValue: document.getElementById("speed-value"),
+    scrollSpeed: document.getElementById("speed-value"),
+    btnSpeedDown: document.getElementById("btn-speed-down"),
+    btnSpeedUp: document.getElementById("btn-speed-up"),
     flipHorizontal: document.getElementById("flip-horizontal"),
     flipVertical: document.getElementById("flip-vertical"),
     textColor: document.getElementById("text-color"),
@@ -38,10 +39,14 @@
     dragStartY: null,
     dragStartOffset: 0,
     dragMoved: false,
+    crawlSpeed: 25,
   };
 
   const MANUAL_SCROLL_STEP = 80;
   const CLICK_THRESHOLD_PX = 6;
+  const SPEED_MIN = 10;
+  const SPEED_MAX = 200;
+  const SPEED_STEP = 5;
 
   function syncContentFromInput() {
     els.content.textContent = els.scriptInput.value;
@@ -117,11 +122,19 @@
   }
 
   function getSpeedPxPerSec() {
-    return Number(els.scrollSpeed.value);
+    return state.crawlSpeed;
   }
 
   function updateSpeedLabel() {
-    els.speedValue.textContent = els.scrollSpeed.value;
+    els.scrollSpeed.textContent = state.crawlSpeed;
+  }
+
+  function adjustSpeed(delta) {
+    state.crawlSpeed = Math.max(
+      SPEED_MIN,
+      Math.min(SPEED_MAX, state.crawlSpeed + delta)
+    );
+    updateSpeedLabel();
   }
 
   function getContentHeight() {
@@ -312,7 +325,12 @@
     els.fontFamily.addEventListener("change", applyFontFamily);
     els.fontSize.addEventListener("input", applyFontSize);
     els.textWidth.addEventListener("input", applyTextWidth);
-    els.scrollSpeed.addEventListener("input", updateSpeedLabel);
+    els.btnSpeedDown.addEventListener("click", function () {
+      adjustSpeed(-SPEED_STEP);
+    });
+    els.btnSpeedUp.addEventListener("click", function () {
+      adjustSpeed(SPEED_STEP);
+    });
     els.flipHorizontal.addEventListener("change", applyFlip);
     els.flipVertical.addEventListener("change", applyFlip);
     els.textColor.addEventListener("input", applyColors);
@@ -366,8 +384,7 @@
             break;
           }
           e.preventDefault();
-          els.scrollSpeed.value = Math.min(200, Number(els.scrollSpeed.value) + 5);
-          updateSpeedLabel();
+          adjustSpeed(SPEED_STEP);
           break;
         case "ArrowDown":
           if (e.shiftKey) {
@@ -376,8 +393,7 @@
             break;
           }
           e.preventDefault();
-          els.scrollSpeed.value = Math.max(10, Number(els.scrollSpeed.value) - 5);
-          updateSpeedLabel();
+          adjustSpeed(-SPEED_STEP);
           break;
         case "Escape":
           if (state.controlsHidden) toggleControlsHidden();

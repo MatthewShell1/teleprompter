@@ -97,10 +97,16 @@ Adjust font, size, and speed using the controls below. Use the flip options when
               </div>
 
               <div class="col-sm-6 col-md-4">
-                <label for="scroll-speed" class="form-label form-label-sm text-secondary mb-1">
-                  Crawl speed <span id="speed-value" class="text-light">50</span>
-                </label>
-                <input type="range" id="scroll-speed" class="form-range" min="10" max="200" value="50">
+                <label class="form-label form-label-sm text-secondary mb-1">Crawl speed</label>
+                <div class="input-group input-group-sm speed-control">
+                  <button id="btn-speed-down" type="button" class="btn btn-outline-light" title="Decrease crawl speed" aria-label="Decrease crawl speed">
+                    <i class="bi bi-dash-lg"></i>
+                  </button>
+                  <span id="speed-value" class="form-control speed-value text-light" aria-live="polite">25</span>
+                  <button id="btn-speed-up" type="button" class="btn btn-outline-light" title="Increase crawl speed" aria-label="Increase crawl speed">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
               </div>
 
               <div class="col-sm-6 col-md-4">
