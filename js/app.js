@@ -124,10 +124,15 @@
     els.speedValue.textContent = els.scrollSpeed.value;
   }
 
+  function getContentHeight() {
+    const content = els.content;
+    return Math.max(content.scrollHeight, content.offsetHeight);
+  }
+
   function getMaxScroll() {
     const viewportHeight = els.viewport.clientHeight;
-    const contentHeight = els.content.offsetHeight;
-    return Math.max(0, contentHeight - viewportHeight * 0.2);
+    const contentHeight = getContentHeight();
+    return Math.max(0, contentHeight - viewportHeight);
   }
 
   function applyTransform() {

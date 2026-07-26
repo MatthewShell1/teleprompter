@@ -189,6 +189,7 @@ body {
 .prompter-content {
   width: 90%;
   max-width: 100%;
+  align-self: flex-start;
   padding: 35vh 1.5rem 100vh;
   color: #ffffff;
   font-family: "Segoe UI", system-ui, sans-serif;
